@@ -28,13 +28,13 @@ void atualizaJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], char tecla, Nivel &nivel, 
 void aplicaGravidade(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, Player &player);
 void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, Player &player);
 void copiaMatriz(int matriz[MAX_TAMANHO][MAX_TAMANHO], int copia[MAX_TAMANHO][MAX_TAMANHO], int tamanho);
-void defineTamanho(int level, int &tamanho);
-void efeitoTexto(const string& texto, int atraso_ms = 40);
+void defineTamanho(int level, Nivel &nivel);
+void efeitoTexto(const string &texto, int atraso_ms = 40);
 void escondeCursor();
 void gotoxy(int XPos, int YPos);
 void imprimeJogo(const int mapa[MAX_TAMANHO][MAX_TAMANHO], const Nivel &nivel, const Player &player);
 void limpaTela();
-void loopJogo(int level);
+void loopJogo(int level, bool &jogo_salvo);
 void menu();
 void mostrarTitulo();
 void pegaInput(char &tecla, bool &executando);
@@ -44,7 +44,8 @@ void sobre();
 void zeraMatriz(int matriz[MAX_TAMANHO][MAX_TAMANHO]);
 
 // do jogo do rpg de texto
-void efeitoTexto(const string& texto, int atraso_ms = 40) {
+void efeitoTexto(const string &texto, int atraso_ms)
+{
 	for (char c : texto) {
 		cout << c << flush;
 		this_thread::sleep_for(chrono::milliseconds(atraso_ms));
@@ -52,7 +53,8 @@ void efeitoTexto(const string& texto, int atraso_ms = 40) {
 	cout << endl;
 }
 
-void mostrarTitulo() {
+void mostrarTitulo() 
+{
 	cout << "======================================" << endl;
 	this_thread::sleep_for(chrono::milliseconds(500));
 
@@ -136,11 +138,10 @@ void processaMenu(bool &executando, bool &jogo_salvo, int &level){
 				switch (tecla) 
 				{
 					case '1': 
-						int level = 0;
+						level = 0;
 						jogo_salvo = false;
 						loopJogo(level, jogo_salvo);
 						break;
-
 					case '2': 
 						if(jogo_salvo)
 						{
@@ -290,7 +291,7 @@ void zeraMatriz(int matriz[MAX_TAMANHO][MAX_TAMANHO])
 	{
 		for (int c = 0; c < MAX_TAMANHO; c++)
 		{
-			matrix[l][c] = 0;
+			matriz[l][c] = 0;
 		}
 	}
 }
@@ -318,7 +319,7 @@ void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, Pla
 				{1, 2, 0, 0, 0, 0, 0, 0, 0, 3, 1},
 				{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 			};
-			copiaMatriz(base, mapa);
+			copiaMatriz(base, mapa, tamanho);
 
 			break;
 		}
@@ -340,7 +341,7 @@ void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, Pla
 				{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 			};
 
-			copiaMatriz(base, mapa);
+			copiaMatriz(base, mapa, tamanho);
 			break;
 		}
 
@@ -364,6 +365,7 @@ void aplicaGravidade(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, Player &pl
 
 void loopJogo(int level, bool &jogo_salvo)   
 {
+	// setar lógica de continuar ignorando os resets abaixo:
 	int mapa[MAX_TAMANHO][MAX_TAMANHO] = {0};
 
 	bool executando = true;
@@ -379,8 +381,9 @@ void loopJogo(int level, bool &jogo_salvo)
 	nivel.rotacao = 0;
 	nivel.tamanho = 11; // default
 	nivel.nivel_completo = false;
+	nivel.perdeu = false;
 	
-	defineTamanho(level, nivel.tamanho);
+	defineTamanho(level, nivel);
 	carregaMapa(level, mapa, nivel.tamanho, player);
 	
 
@@ -396,12 +399,13 @@ void loopJogo(int level, bool &jogo_salvo)
 		if (tecla != 0)
 		{
 			atualizaJogo(mapa, tecla, nivel, player, executando);
+			imprimeJogo(mapa, nivel, player);
 		}
 
-		// TODO: Add small delay (e.g., Sleep(30)) to cap frame rate and prevent high CPU usage.
+		this_thread::sleep_for(chrono::milliseconds(30));
 	}
 
-	// TODO: Display Level Complete message if nivel.nivel_completo is true.
+	// TODO: Passar o level caso tenha ganho
 	if(!executando && !nivel.nivel_completo && !nivel.perdeu)
 	{
 		jogo_salvo = true;
@@ -414,14 +418,20 @@ void loopJogo(int level, bool &jogo_salvo)
 	
 int main() {
 	bool executando = true;
+	int level = 0;
+	bool jogo_salvo = false;
 
+	setlocale(LC_ALL, ""); // local do pt br sistema
+
+	limpaTela();
 	mostrarTitulo();
 
+	//adicionar
 	while (executando) 
 	{
-		limpaTela();
 		menu();
-		processaMenu(executando);
+		processaMenu(executando, jogo_salvo, level);
+		limpaTela();
 	}
 
 	limpaTela();
