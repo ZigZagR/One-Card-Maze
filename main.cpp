@@ -2,53 +2,44 @@
 #include <iostream>
 #include <time.h>
 #include <windows.h>
-#include <thread>
-#include <chrono>
 using namespace std;
 
-#define MAX_TAMANHO 30
-struct Player
-{
-	int x;
-	int y;
-	bool em_alavanca;
-};
-
-struct Nivel
-{
-	int tamanho;
-	int rotacao;
-	bool alavanca_ativa;
-	bool nivel_completo;
-	bool perdeu;
-};
+const int MAX_TAMANHO = 30;
 
 void ajuda();
-void atualizaJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], char tecla, Nivel &nivel, Player &player, bool &executando);
-void aplicaGravidade(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, Player &player);
-void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, Player &player);
+void atualizaJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], char tecla, int tamanho, int &rotacao, int &px, int &py, int &sob_jogador, bool &nivel_completo, bool &perdeu, bool &executando);
+void aplicaGravidade(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho);
+void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int &px, int &py);
 void copiaMatriz(int matriz[MAX_TAMANHO][MAX_TAMANHO], int copia[MAX_TAMANHO][MAX_TAMANHO], int tamanho);
-void defineTamanho(int level, Nivel &nivel);
+void defineTamanho(int level, int &tamanho);
 void efeitoTexto(const string &texto, int atraso_ms = 40);
 void escondeCursor();
-void gotoxy(int XPos, int YPos);
-void imprimeJogo(const int mapa[MAX_TAMANHO][MAX_TAMANHO], const Nivel &nivel, const Player &player);
+void gotoxy(HANDLE h, int XPos, int YPos);
+void imprimeJogo(HANDLE h, const int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao, int px, int py);
 void limpaTela();
-void loopJogo(int level, bool &jogo_salvo);
+void localizaJogador(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int &px, int &py)
+void loopJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int level, 
+              int &rotacao, int &px, int &py, int &sob_jogador, 
+              int &movimentos, int &total_rotacoes, bool &jogo_em_andamento); 
 void menu();
 void mostrarTitulo();
 void pegaInput(char &tecla, bool &executando);
-void processaMenu(bool &executando, bool &jogo_em_andamento, int &level);
-void rotacionaMapa(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, Player &player, char direcao);
+void processaMenu(bool &executando, bool &jogo_em_andamento, int &level,
+                   int mapa[MAX_TAMANHO][MAX_TAMANHO], int &tamanho,
+                   int &rotacao, int &px, int &py, int &sob_jogador,
+                   int &movimentos, int &total_rotacoes);
+void rotacionaMapa(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int &px, int &py, char direcao);
+int selecionaMapa();
 void sobre();
 void zeraMatriz(int matriz[MAX_TAMANHO][MAX_TAMANHO]);
 
 // do jogo do rpg de texto
 void efeitoTexto(const string &texto, int atraso_ms)
 {
-	for (char c : texto) {
-		cout << c << flush;
-		this_thread::sleep_for(chrono::milliseconds(atraso_ms));
+	for (int i = 0; i < texto.size(); i++) 
+	{
+		cout << texto[i] << flush;
+		Sleep(atraso_ms);
 	}
 	cout << endl;
 }
@@ -56,15 +47,15 @@ void efeitoTexto(const string &texto, int atraso_ms)
 void mostrarTitulo() 
 {
 	cout << "======================================" << endl;
-	this_thread::sleep_for(chrono::milliseconds(500));
+	Sleep(500);
 
 	efeitoTexto("         O N E   C A R D   G A M E     ", 50);
 
-	this_thread::sleep_for(chrono::milliseconds(500));
+	Sleep(500);
 	cout << "======================================" << endl;
 	cout << endl;
 
-	this_thread::sleep_for(chrono::milliseconds(800));
+	Sleep(800);
 }
 
 void escondeCursor()
@@ -77,7 +68,7 @@ void escondeCursor()
 
 void menu(){
 	cout << "1. Novo Jogo " << endl;
-	cout << "2. Carregar Jogo " << endl;
+	cout << "2. Continuar " << endl;
 	cout << "3. Ajuda " << endl;
 	cout << "4. Sobre " << endl;
 	cout << endl;
@@ -125,7 +116,67 @@ void ajuda(){
     getch();
 }
 
-void processaMenu(bool &executando, bool &jogo_salvo, int &level){
+int selecionaMapa()
+{
+	limpaTela();
+	cout << "Novo Jogo" << endl;
+	cout << "1. Escolher mapa" << endl;
+	cout << "2. Mapa aleatorio" << endl;
+	cout << endl;
+	cout << "Pressione ESC para voltar" << endl;
+
+	while(true)
+	{
+		char opcao = getch();
+
+		if(opcao == '1')
+		{
+			limpaTela();
+			cout << "Escolher o mapa (1 a 3):" << endl;
+			cout << "1 - Mapa 1" << endl;
+			cout << "2 - Mapa 2" << endl;
+			cout << "3 - Mapa 3" << endl;
+			cout << endl;
+			cout << "Pressione ESC para voltar" << endl;
+
+			while(true)
+			{
+				char opcao = getch();
+
+				if(opcao == '1')
+				{
+					return 0;
+				}
+				else if(opcao == '2')
+				{
+					return 1;
+				}
+				else if(opcao == '3')
+				{
+					return 2;
+				}
+				else if(opcao == 27) // ESC
+				{
+					return -1;
+				}
+			}
+		}
+		else if(opcao == '2')
+		{
+			return rand() % 3;
+		}
+		else if(opcao == 27)
+		{
+			return -1;
+		}
+	}
+}
+
+void processaMenu(bool &executando, bool &jogo_em_andamento, int &level,
+                  int mapa[MAX_TAMANHO][MAX_TAMANHO], int &tamanho, 
+                  int &rotacao, int &px, int &py, int &sob_jogador,
+                  int &movimentos, int &total_rotacoes) 
+{
 	char tecla = 0;
 	
 	while (true) {
@@ -133,53 +184,76 @@ void processaMenu(bool &executando, bool &jogo_salvo, int &level){
 		{
 			tecla = _getch();
 
-			if (tecla >= '1' && tecla <= '4') 
+			if (tecla == '1') 
 			{
-				switch (tecla) 
+				int mapa_escolhido = selecionaMapa();
+				
+				if(mapa_escolhido != -1)
 				{
-					case '1': 
-						level = 0;
-						jogo_salvo = false;
-						loopJogo(level, jogo_salvo);
-						break;
-					case '2': 
-						if(jogo_salvo)
-						{
-							loopJogo(level, jogo_salvo);
-						}
-						break;
-					case '3': 
-						ajuda(); 
-						break;
-					case '4': 
-						sobre(); 
-						break;
+								
+					level = mapa_escolhido;
+					defineTamanho(level, tamanho);
+					carregaMapa(level, mapa, tamanho, px, py);
+
+					sob_jogador = 0;
+					rotacao = 0;
+					movimentos = 0;
+					total_rotacoes = 0;
+					jogo_em_andamento = true;
+
+					loopJogo(mapa, tamanho, level, rotacao, px, py, 
+						sob_jogador, movimentos, total_rotacoes, jogo_em_andamento);
 				}
-					break;
+
+				break;
+			}
+			else if (tecla == '2')
+			{
+				if (jogo_em_andamento)
+				{
+					loopJogo(mapa, tamanho, level, rotacao, px, py, 
+                     sob_jogador, movimentos, total_rotacoes, jogo_em_andamento);
 				}
-				else if (tecla == 27) { // ESC
-					executando = false;
-					break;
+				else
+				{
+					cout << "Nenhum jogo em andamento!\n"; 
+					Sleep(1000);
+				}
+                break;
+			}
+			else if (tecla == '3')
+			{
+				ajuda();
+				break;
+			}
+			else if (tecla == '4')
+			{
+				sobre();
+				break;
+			}
+			else if (tecla == 27) // ESC
+			{
+				executando = false;
+				break;
 			}
 
-		this_thread::sleep_for(chrono::milliseconds(30));
+		Sleep(30);
 		}
 	}
 }
-
-void defineTamanho(int level, Nivel &nivel)
+void defineTamanho(int level, int &tamanho)
 {
 	if (level == 0) 
 	{
-		nivel.tamanho = 11;
+		tamanho = 11;
 	}
 	else if(level == 1)
 	{
-		nivel.tamanho = 13;
+		tamanho = 13;
 	}
 	else if(level == 2)
 	{
-		nivel.tamanho = 15;
+		tamanho = 15;
 	}
 }
 
@@ -197,10 +271,34 @@ void limpaTela()
 	cout << "\033[H\033[2J"; // limpador de tela universal ANSI -> Stackoverflow
 }
 
-void atualizaJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], char tecla, Nivel &nivel, Player &player, bool &executando)
+bool movimentoValido(int x, int y, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao)
 {
-	int prox_x = player.x;
-	int prox_y = player.y;
+	if (x < 0 || x >= tamanho || y < 0 || y >= tamanho)
+	{
+		return false; // fora dos limites
+	}
+	if (mapa[x][y] == 1)
+	{
+		return false; // parede
+	}
+	if((mapa[x][y] == 6) && (rotacao == 0 || rotacao == 180))
+	{
+		return false; // porta fechada
+	}
+	if((mapa[x][y] == 7) && (rotacao == 90 || rotacao == 270))
+	{
+		return false; // porta fechada
+	}
+
+	//       - 6: PortaA ('=') / (':') fechada em 0 e 180 de rotação, aberta em 90 e 270
+	//       - 7: PortaB ('|') / (';') fechada em 90 e 270 de rotação, aberta em 0 e 180
+	return true;
+}
+
+void atualizaJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], char tecla, int tamanho, int &rotacao, int &px, int &py, int &sob_jogador, bool &nivel_completo, bool &perdeu, bool &executando)
+{
+	int prox_x = px;
+	int prox_y = py;
 
 	if (tecla == 'w' || tecla == 'W') 
 	{
@@ -219,43 +317,49 @@ void atualizaJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], char tecla, Nivel &nivel, 
 		prox_x++;
 	}
 	else if (tecla == 'r' || tecla == 'R')
-        {
-                // TODO: Restart
-                return;
-        }
-	else if((tecla == 'q' || tecla == 'Q' || tecla == 'e' || tecla == 'E') && player.em_alavanca)
 	{
-		rotacionaMapa(mapa, nivel.tamanho, player, tecla);
+		// TODO: Restart
+		return;
+	}
+	else if((tecla == 'q' || tecla == 'Q' || tecla == 'e' || tecla == 'E') && sob_jogador == 4)
+	{
+		rotacionaMapa(mapa, tamanho, px, py, tecla);
+
 		if (tecla == 'q' || tecla == 'Q')
 		{
-			nivel.rotacao = nivel.rotacao + 270 % 360; // faz não ficar com rotação maior que 360
+			rotacao = (rotacao + 270) % 360;
 		}
 		else
 		{
-			nivel.rotacao = nivel.rotacao + 90 % 360;
+			rotacao = (rotacao + 90) % 360;
 		}
+
+		total_rotacoes++;
 	}
+
+
+	
 	// TODO: Validar prox_x e prox_y nos limites.
-        // TODO: Verificação de colisão:
-        //       - Parede / Porta Fechada -> não move
-        //       - Alavanca (4): Update player.em_alavanca = true e move player salvando que a alavanca tá embaixo.
-        //       - Saída (3): Seta nivel.nivel_completo = true.
-        //       - Vazio (0): Move player (player.x = prox_x; player.y = prox_y; player.em_alavanca = false).
+	// TODO: Verificação de colisão:
+	//       - Parede / Porta Fechada -> não move
+	//       - Alavanca (4): sob_jogador = 4 e move player salvando que a alavanca tá embaixo.
+	//       - Saída (5): Seta nivel_completo = true.
+	//       - Vazio (0): Move player (px = prox_x; py = prox_y; sob_jogador = 0).
 }
 
-void imprimeJogo(HANDLE h, const int mapa[MAX_TAMANHO][MAX_TAMANHO], const Nivel &nivel, const Player &player)
+void imprimeJogo(HANDLE h, const int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao, int px, int py)
 {
 	// TODO:  gotoxy(h, 0, 0).
-        // TODO: itera [0..nivel.tamanho) e mapeia int -> ASCII:
-        //       - 0: Vazio (' ')
-        //       - 1: Parede ('#')
-        //       - 2: Jogador ('@')
+	// TODO: itera [0..tamanho) e mapeia int -> ASCII:
+	//       - 0: Vazio (' ')
+	//       - 1: Parede ('#')
+	//       - 2: Jogador ('@')
 	//       - 3: Bloco ('O')
 	//       - 4: Alavanca ('A')
-        //       - 5: Saída ('S')
+	//       - 5: Saída ('S')
 	//       - 6: PortaA ('=') / (':') fechada em 0 e 180 de rotação, aberta em 90 e 270
-        //       - 5: PortaB ('|') / (';') fechada em 90 e 270 de rotação, aberta em 0 e 180
-        // TODO: Barra de status (Rotacao, Level, Tempo).
+	//       - 7: PortaB ('|') / (';') fechada em 90 e 270 de rotação, aberta em 0 e 180
+	// TODO: Barra de status (Rotacao, Level, Tempo).
 }
 
 void pegaInput(char &tecla, bool &executando)
@@ -269,9 +373,9 @@ void pegaInput(char &tecla, bool &executando)
 		} 
 	}
 	else
-        {
-                tecla = 0; // Clear key buffer if no input detected
-        }
+	{
+		tecla = 0; // Clear key buffer if no input detected
+	}
 }
 
 void copiaMatriz(int matriz[MAX_TAMANHO][MAX_TAMANHO], int copia[MAX_TAMANHO][MAX_TAMANHO], int tamanho)
@@ -296,15 +400,15 @@ void zeraMatriz(int matriz[MAX_TAMANHO][MAX_TAMANHO])
 	}
 }
 
-void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, Player &player) 
+void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int &px, int &py) 
 {
 	zeraMatriz(mapa);
 
 	switch(level)
 	{
 		case 0: {
-			player.x = 1; // arrumar dps
-			player.y = 1; // arrumar dps
+			px = 1; // arrumar dps
+			py = 1; // arrumar dps
 
 			int base[MAX_TAMANHO][MAX_TAMANHO] = {
 				{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -324,8 +428,8 @@ void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, Pla
 			break;
 		}
 		case 1: {
-			player.x = 1; // arrumar dps
-			player.y = 1; // arrumar dps
+			px = 1; // arrumar dps
+			py = 1; // arrumar dps
 
 			int base[MAX_TAMANHO][MAX_TAMANHO] = {
 				{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -350,77 +454,109 @@ void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, Pla
 	}
 }
 
-void rotacionaMapa(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, Player &player, char direcao)
+void localizaJogador(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int &px, int &py)
+{
+	for (int l = 0; l < tamanho; l++)
+	{
+		for (int c = 0; c < tamanho; c++)
+		{
+			if (mapa[l][c] == 2)
+			{
+				px = l;
+				py = c;
+				break;
+			}
+		}
+	}
+}
+
+void rotacionaMapa(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int &px, int &py, char direcao)
 {
 	// TODO: Rotação direita, esquerda
-        // TODO: Mudar toda a matriz inclusive player
-        // TODO: Aplica gravidade em tudo até no player.
+	// TODO: Mudar toda a matriz inclusive player
+	// TODO: Aplica gravidade nos blocos.
+	int temp[MAX_TAMANHO][MAX_TAMANHO];
+	
+	for (int l = 0; l < tamanho; l++)
+	{
+		for (int c = 0; c < tamanho; c++)
+		{
+			if (direcao == 'e' || direcao == 'E')
+			{
+				temp[c][tamanho - 1 - l] = mapa[l][c];
+			}
+			else if (direcao == 'q' || direcao == 'Q')
+			{
+				temp[tamanho - 1 - c][l] = mapa[l][c];
+			}
+		}
+	}
+
+	copiaMatriz(temp, mapa, tamanho);
+
+	localizaJogador(mapa, tamanho, px, py);
+	aplicaGravidade(mapa, tamanho);
 }
 
-void aplicaGravidade(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, Player &player)
+void aplicaGravidade(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho)
 {
-        // TODO: Vai pra baixo até bater em objeto sólido (porta fechada ou parede).
-        // TODO: Checa se uma porta fechando mata o player ou destroi uma caixa.
+	// TODO: Vai pra baixo até bater em objeto sólido (porta fechada ou parede).
+	// TODO: Checa se uma porta fechando mata o player ou destroi uma caixa.
 }
 
-void loopJogo(int level, bool &jogo_salvo)   
+void loopJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int level, 
+              int &rotacao, int &px, int &py, int &sob_jogador, 
+              int &movimentos, int &total_rotacoes, bool &jogo_em_andamento) 
 {
-	// setar lógica de continuar ignorando os resets abaixo:
-	int mapa[MAX_TAMANHO][MAX_TAMANHO] = {0};
-
-	bool executando = true;
+	bool executando_level = true;
 	char tecla = 0;
-
-	Player player;
-	player.x = 0;
-	player.y = 0;
-	player.em_alavanca = false;
-
-	Nivel nivel;
-	nivel.alavanca_ativa = false;
-	nivel.rotacao = 0;
-	nivel.tamanho = 11; // default
-	nivel.nivel_completo = false;
-	nivel.perdeu = false;
-	
-	defineTamanho(level, nivel);
-	carregaMapa(level, mapa, nivel.tamanho, player);
-	
-
+	bool nivel_completo = false;
+	bool perdeu = false;
+		
 	// desativa o cursor no console
 	escondeCursor();
 	HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE); // handle da saída do console
 	limpaTela();
+
+	imprimeJogo(h, mapa, tamanho, rotacao, px, py);
 	
-	while(executando && !(nivel.nivel_completo))
+	while(executando_level && !nivel_completo && !perdeu)
 	{
-		pegaInput(tecla, executando);
+		pegaInput(tecla, executando_level);
 
 		if (tecla != 0)
 		{
-			atualizaJogo(mapa, tecla, nivel, player, executando);
-			imprimeJogo(mapa, nivel, player);
+			atualizaJogo(mapa, tecla, tamanho, rotacao, px, py, sob_jogador, nivel_completo, perdeu, executando_level);
+			imprimeJogo(h, mapa, tamanho, rotacao, px, py);
 		}
-
-		this_thread::sleep_for(chrono::milliseconds(30));
+		Sleep(30);
 	}
 
-	// TODO: Passar o level caso tenha ganho
-	if(!executando && !nivel.nivel_completo && !nivel.perdeu)
+	if (nivel_completo || perdeu)
 	{
-		jogo_salvo = true;
+		jogo_em_andamento = false;
 	}
 	else 
 	{
-		jogo_salvo = false;
+		// ESC
+		jogo_em_andamento = true;
 	}
 }
 	
 int main() {
 	bool executando = true;
-	int level = 0;
-	bool jogo_salvo = false;
+    bool jogo_em_andamento = false;
+    int level = 0;
 
+	int mapa[MAX_TAMANHO][MAX_TAMANHO];
+    int tamanho = 11;
+    int rotacao = 0;
+    int px = 0, py = 0;
+    int sob_jogador = 0;
+    int movimentos = 0;
+    int total_rotacoes = 0;
+
+	srand(time(NULL));
 	setlocale(LC_ALL, ""); // local do pt br sistema
 
 	limpaTela();
@@ -430,7 +566,9 @@ int main() {
 	while (executando) 
 	{
 		menu();
-		processaMenu(executando, jogo_salvo, level);
+		processaMenu(executando, jogo_em_andamento, level,
+                     mapa, tamanho, rotacao, px, py, sob_jogador,
+                     movimentos, total_rotacoes);
 		limpaTela();
 	}
 
