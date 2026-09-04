@@ -1,0 +1,9 @@
+{
+    "editor.tabSize": 8,
+    "editor.insertSpaces": false,
+    "editor.formatOnSave": false,
+    "[cpp]": {
+        "editor.defaultFormatter": "ms-vscode.cpptools"
+    },
+    "C_Cpp.clang_format_style": "{ BasedOnStyle: LLVM, BreakBeforeBraces: Allman, UseTab: Always, IndentWidth: 8, TabWidth: 8, ContinuationIndentWidth: 8 }"
+}
