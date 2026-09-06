@@ -5,5 +5,5 @@
     "[cpp]": {
         "editor.defaultFormatter": "ms-vscode.cpptools"
     },
-    "C_Cpp.clang_format_style": "{ BasedOnStyle: LLVM, BreakBeforeBraces: Allman, UseTab: Always, IndentWidth: 8, TabWidth: 8, ContinuationIndentWidth: 8 }"
+    "C_Cpp.clang_format_style": "{ BasedOnStyle: LLVM, BreakBeforeBraces: Allman, ColumnLimit: 120, UseTab: Always, IndentWidth: 8, TabWidth: 8, ContinuationIndentWidth: 8 }"
 }

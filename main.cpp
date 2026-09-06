@@ -7,46 +7,46 @@ using namespace std;
 const int MAX_TAMANHO = 30;
 
 void ajuda();
-void atualizaJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], char tecla, int tamanho,
-		  int &rotacao, int &plinha, int &pcoluna, int &sob_jogador,
-		  bool &nivel_completo, bool &perdeu, bool &executando,
-		  int &total_rotacoes, int &movimentos);
-void aplicaGravidade(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho,
-		     int rotacao);
-void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho,
-		 int &plinha, int &pcoluna);
-void copiaMatriz(int matriz[MAX_TAMANHO][MAX_TAMANHO],
-		 int copia[MAX_TAMANHO][MAX_TAMANHO], int tamanho);
+void atualizaJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], char tecla, int tamanho, int &rotacao, int &plinha, int &pcoluna,
+		  int &sob_jogador, bool &sob_alavanca, bool &nivel_completo, bool &perdeu, int &total_rotacoes,
+		  int &movimentos);
+void aplicaGravidade(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao);
+void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int &plinha, int &pcoluna);
+bool celulaPodeSerAtravessada(int celula, int rotacao);
+bool celulaSustentaBloco(int celula, int rotacao);
+void copiaMatriz(int matriz[MAX_TAMANHO][MAX_TAMANHO], int copia[MAX_TAMANHO][MAX_TAMANHO], int tamanho);
 void defineTamanho(int level, int &tamanho);
 void efeitoTexto(const string &texto, int atraso_ms = 40);
 void escondeCursor();
-void fechaPortas(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao,
-		 int plinha,
-		 int pcoluna bool &perdeu) void gotoxy(HANDLE h, int XPos,
-						       int YPos);
+void esmagaCaixas(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao);
+bool estaSobreAlavanca(int sob_jogador);
+void fechaPortas(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao, int plinha, int pcoluna, bool &perdeu,
+		 int sob_jogador);
+void gotoxy(HANDLE h, int XPos, int YPos);
 void hud(int level, int rotacao, int movimentos, int total_rotacoes);
-void imprimeJogo(HANDLE h, const int mapa[MAX_TAMANHO][MAX_TAMANHO],
-		 int tamanho, int rotacao, int plinha, int pcoluna, int level,
-		 int movimentos, int total_rotacoes);
+void imprimeJogo(HANDLE h, const int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao, int plinha, int pcoluna,
+		 int level, int movimentos, int total_rotacoes);
+void imprime_menu();
+void limpaInput();
 void limpaTela();
-void localizaJogador(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho,
-		     int &plinha, int &pcoluna);
-void loopJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int level,
-	      int &rotacao, int &plinha, int &pcoluna, int &sob_jogador,
-	      int &movimentos, int &total_rotacoes, bool &jogo_em_andamento);
-void menu();
-void mostrarTitulo();
-bool movimentoValido(int l, int c, int mapa[MAX_TAMANHO][MAX_TAMANHO],
-		     int tamanho, int rotacao);
+void localizaJogador(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int &plinha, int &pcoluna);
+void loopJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int level, int &rotacao, int &plinha, int &pcoluna,
+	      int &sob_jogador, bool &sob_alavanca, int &movimentos, int &total_rotacoes, bool &jogo_em_andamento);
+void mostrarTitulo(bool delay);
+bool movimentoValido(int l, int c, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao);
+void moveJogador(int mapa[MAX_TAMANHO][MAX_TAMANHO], int prox_l, int prox_c, int &plinha, int &pcoluna,
+		 int &sob_jogador, bool &sob_alavanca, int &movimentos, bool &nivel_completo);
 void pegaInput(char &tecla, bool &executando);
-void processaMenu(bool &executando, bool &jogo_em_andamento, int &level,
-		  int mapa[MAX_TAMANHO][MAX_TAMANHO], int &tamanho,
-		  int &rotacao, int &plinha, int &pcoluna, int &sob_jogador,
+bool portaFechada(int porta, int rotacao);
+void processaMenu(bool &executando, bool &jogo_em_andamento, int &level, int mapa[MAX_TAMANHO][MAX_TAMANHO],
+		  int &tamanho, int &rotacao, int &plinha, int &pcoluna, int &sob_jogador, bool &sob_alavanca,
 		  int &movimentos, int &total_rotacoes);
-void rotacionaMapa(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int &plinha,
-		   int &pcoluna, char direcao, int &rotacao, bool &perdeu);
+void rotacionaMapa(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, char direcao, int &rotacao, int &plinha,
+		   int &pcoluna, int &sob_jogador, bool &perdeu);
 int selecionaMapa();
 void sobre();
+void tela_derrota(int movimentos, int total_rotacoes);
+void tela_vitoria(int movimentos, int total_rotacoes);
 void zeraMatriz(int matriz[MAX_TAMANHO][MAX_TAMANHO]);
 
 // do jogo do rpg de texto
@@ -62,24 +62,70 @@ void efeitoTexto(const string &texto, int atraso_ms)
 
 void hud(int level, int rotacao, int movimentos, int total_rotacoes)
 {
-	// TODO: Fazer hud do jogo
+	cout << "\n";
+	cout << "Mapa: " << (level + 1) << "   ";
+	cout << "Orientacao: " << rotacao << " graus   ";
+	cout << "Movimentos: " << movimentos << "   ";
+	cout << "Rotacoes: " << total_rotacoes << "    \n";
 }
 
-void mostrarTitulo()
+void mostrarTitulo(bool delay)
 {
+	// if tao pra n dar sleep no jogo em si quando chama no imprime jogo
 	cout << "======================================" << endl;
-	Sleep(500);
+	if (delay)
+	{
+		Sleep(500);
+	}
 
-	efeitoTexto("         O N E   C A R D   G A M E     ", 50);
+	if (delay)
+	{
+		efeitoTexto("      O N E   C A R D   G A M E       ", 50);
+	}
+	else
+	{
+		cout << "      O N E   C A R D   G A M E       \n";
+	}
 
-	Sleep(500);
+	if (delay)
+	{
+		Sleep(500);
+	}
 	cout << "======================================" << endl;
 	cout << endl;
 
-	Sleep(800);
+	if (delay)
+	{
+		Sleep(800);
+	}
 }
 
-void escondeCursor()
+void tela_derrota(int movimentos, int total_rotacoes)
+{
+	limpaTela();
+	cout << "====================================\n";
+	cout << "         GAME OVER!                 \n";
+	cout << "   Voce foi esmagado pela porta.    \n";
+	cout << "====================================\n\n";
+	cout << "Pressione qualquer tecla para voltar...";
+	limpaInput();
+	getch();
+}
+
+void tela_vitoria(int movimentos, int total_rotacoes)
+{
+	limpaTela();
+	cout << "====================================\n";
+	cout << "         VOCE VENCEU!               \n";
+	cout << "====================================\n";
+	cout << "Movimentos: " << movimentos << "\n";
+	cout << "Rotacoes: " << total_rotacoes << "\n\n";
+	cout << "Pressione qualquer tecla para voltar...";
+	limpaInput();
+	getch();
+}
+
+void escondeCursor() // prof.
 {
 	CONSOLE_CURSOR_INFO cursor;
 	cursor.dwSize = 100;
@@ -87,34 +133,33 @@ void escondeCursor()
 	SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursor);
 }
 
-void menu()
+void imprime_menu()
 {
 	cout << "1. Novo Jogo " << endl;
 	cout << "2. Continuar " << endl;
-	cout << "3. Ajuda " << endl;
-	cout << "4. Sobre " << endl;
+	cout << "3. Sobre / Ajuda " << endl;
+	cout << "4. Fim " << endl; // Em vez de apenas deixar o ESC
 	cout << endl;
-	cout << "Escolha uma opção " << endl;
-	cout << endl;
-	cout << "Pressione ESC para sair do jogo" << endl;
+	cout << "Escolha uma opcao: " << endl;
 }
 
 void sobre()
 {
-	limpaTela();
+	cout << "======= Sobre =======" << endl;
+	cout << endl;
+
 	cout << "Equipe de desenvolvimento:\n- Pedro Henrique R. J. "
 		"Nicolini\n- "
 		"Luiz Eduardo F. N. Goncalves\n";
 	cout << "Setembro/2026\n";
 	cout << "Professor: Thiago Felski\nDisciplina: Algoritmos e "
 		"Programacao II\n\n";
-	cout << "Pressione qualquer tecla para voltar ao menu...";
-	getch();
 }
 
 void ajuda()
 {
 	limpaTela();
+	sobre();
 
 	cout << "======= AJUDA =======" << endl;
 	cout << endl;
@@ -127,12 +172,9 @@ void ajuda()
 	cout << endl;
 
 	cout << "REGRAS:" << endl;
-	cout << "- O jogador nao atravessa paredes, blocos ou portas fechadas."
-	     << endl;
-	cout << "- Rotacao gira tudo: paredes, blocos, portas, saida e jogador."
-	     << endl;
-	cout << "- Portas fechadas bloqueiam e sustentam blocos; abertas nao."
-	     << endl;
+	cout << "- O jogador nao atravessa paredes, blocos ou portas fechadas." << endl;
+	cout << "- Rotacao gira tudo: paredes, blocos, portas, saida e jogador." << endl;
+	cout << "- Portas fechadas bloqueiam e sustentam blocos; abertas nao." << endl;
 	cout << "- Apos girar, blocos caem ate encontrar apoio." << endl;
 	cout << "- Porta fechando sobre bloco: bloco e destruido." << endl;
 	cout << "- Porta fechando sobre jogador: fase e perdida." << endl;
@@ -140,6 +182,7 @@ void ajuda()
 	cout << endl;
 
 	cout << "Pressione qualquer tecla para voltar..." << endl;
+	limpaInput();
 	getch();
 }
 
@@ -199,12 +242,13 @@ int selecionaMapa()
 	}
 }
 
-void processaMenu(bool &executando, bool &jogo_em_andamento, int &level,
-		  int mapa[MAX_TAMANHO][MAX_TAMANHO], int &tamanho,
-		  int &rotacao, int &plinha, int &pcoluna, int &sob_jogador,
+void processaMenu(bool &executando, bool &jogo_em_andamento, int &level, int mapa[MAX_TAMANHO][MAX_TAMANHO],
+		  int &tamanho, int &rotacao, int &plinha, int &pcoluna, int &sob_jogador, bool &sob_alavanca,
 		  int &movimentos, int &total_rotacoes)
 {
 	char tecla = 0;
+
+	limpaInput();
 
 	while (true)
 	{
@@ -214,6 +258,7 @@ void processaMenu(bool &executando, bool &jogo_em_andamento, int &level,
 
 			if (tecla == '1')
 			{
+				limpaInput();
 				int mapa_escolhido = selecionaMapa();
 
 				if (mapa_escolhido != -1)
@@ -221,19 +266,17 @@ void processaMenu(bool &executando, bool &jogo_em_andamento, int &level,
 
 					level = mapa_escolhido;
 					defineTamanho(level, tamanho);
-					carregaMapa(level, mapa, tamanho,
-						    plinha, pcoluna);
+					carregaMapa(level, mapa, tamanho, plinha, pcoluna);
 
 					sob_jogador = 0;
+					sob_alavanca = false;
 					rotacao = 0;
 					movimentos = 0;
 					total_rotacoes = 0;
 					jogo_em_andamento = true;
 
-					loopJogo(mapa, tamanho, level, rotacao,
-						 plinha, pcoluna, sob_jogador,
-						 movimentos, total_rotacoes,
-						 jogo_em_andamento);
+					loopJogo(mapa, tamanho, level, rotacao, plinha, pcoluna, sob_jogador,
+						 sob_alavanca, movimentos, total_rotacoes, jogo_em_andamento);
 				}
 
 				break;
@@ -242,10 +285,8 @@ void processaMenu(bool &executando, bool &jogo_em_andamento, int &level,
 			{
 				if (jogo_em_andamento)
 				{
-					loopJogo(mapa, tamanho, level, rotacao,
-						 plinha, pcoluna, sob_jogador,
-						 movimentos, total_rotacoes,
-						 jogo_em_andamento);
+					loopJogo(mapa, tamanho, level, rotacao, plinha, pcoluna, sob_jogador,
+						 sob_alavanca, movimentos, total_rotacoes, jogo_em_andamento);
 				}
 				else
 				{
@@ -261,7 +302,7 @@ void processaMenu(bool &executando, bool &jogo_em_andamento, int &level,
 			}
 			else if (tecla == '4')
 			{
-				sobre();
+				executando = false;
 				break;
 			}
 			else if (tecla == 27) // ESC
@@ -283,7 +324,11 @@ void defineTamanho(int level, int &tamanho)
 	}
 	else if (level == 1)
 	{
-		tamanho = 11;
+		tamanho = 13;
+	}
+	else if (level == 2)
+	{
+		tamanho = 15;
 	}
 }
 
@@ -302,36 +347,38 @@ void limpaTela()
 				 // Stackoverflow
 }
 
-bool movimentoValido(int l, int c, int mapa[MAX_TAMANHO][MAX_TAMANHO],
-		     int tamanho, int rotacao)
+bool ehCaixa(int celula) { return celula == 3 || celula == 8 || celula == 9; }
+
+bool movimentoValido(int l, int c, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao)
 {
 	if (l < 0 || l >= tamanho || c < 0 || c >= tamanho)
 	{
 		return false; // fora dos limites
 	}
-	if (mapa[l][c] == 1)
-	{
-		return false; // parede
-	}
-	if (mapa[l][c] == 3)
-	{
-		return false; // bloco
-	}
-	if ((mapa[l][c] == 6) && (rotacao == 0 || rotacao == 180))
-	{
-		return false; // porta A
-	}
-	if ((mapa[l][c] == 7) && (rotacao == 90 || rotacao == 270))
-	{
-		return false; // porta B
-	}
-
-	return true;
+	return celulaPodeSerAtravessada(mapa[l][c], rotacao);
 }
 
-void atualizaJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], char tecla, int tamanho,
-		  int &rotacao, int &plinha, int &pcoluna, int &sob_jogador,
-		  bool &nivel_completo, bool &perdeu, bool &executando,
+void moveJogador(int mapa[MAX_TAMANHO][MAX_TAMANHO], int prox_l, int prox_c, int &plinha, int &pcoluna,
+		 int &sob_jogador, bool &sob_alavanca, int &movimentos, bool &nivel_completo)
+{
+	mapa[plinha][pcoluna] = sob_jogador; // bota base antiga
+	sob_jogador = mapa[prox_l][prox_c];  // salva
+	sob_alavanca = estaSobreAlavanca(sob_jogador);
+
+	mapa[prox_l][prox_c] = 2; // move
+	plinha = prox_l;
+	pcoluna = prox_c;
+
+	movimentos++;
+
+	if (sob_jogador == 5)
+	{
+		nivel_completo = true;
+	}
+}
+
+void atualizaJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], char tecla, int tamanho, int &rotacao, int &plinha, int &pcoluna,
+		  int &sob_jogador, bool &sob_alavanca, bool &nivel_completo, bool &perdeu, bool &reiniciar,
 		  int &total_rotacoes, int &movimentos)
 {
 	int prox_l = plinha;
@@ -355,24 +402,13 @@ void atualizaJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], char tecla, int tamanho,
 	}
 	else if (tecla == 'r' || tecla == 'R')
 	{
-		// TODO: Restart
+		reiniciar = true;
 		return;
 	}
-	else if ((tecla == 'q' || tecla == 'Q' || tecla == 'e' ||
-		  tecla == 'E') &&
-		 sob_jogador == 4)
+	else if ((tecla == 'q' || tecla == 'Q' || tecla == 'e' || tecla == 'E') && sob_alavanca)
 	{
-		rotacionaMapa(mapa, tamanho, plinha, pcoluna, tecla, rotacao,
-			      perdeu);
-
-		if (tecla == 'q' || tecla == 'Q')
-		{
-			rotacao = (rotacao + 270) % 360;
-		}
-		else
-		{
-			rotacao = (rotacao + 90) % 360;
-		}
+		rotacionaMapa(mapa, tamanho, tecla, rotacao, plinha, pcoluna, sob_jogador, perdeu);
+		sob_alavanca = estaSobreAlavanca(sob_jogador);
 
 		total_rotacoes++;
 		return;
@@ -384,35 +420,17 @@ void atualizaJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], char tecla, int tamanho,
 
 	if (movimentoValido(prox_l, prox_c, mapa, tamanho, rotacao))
 	{
-		mapa[plinha][pcoluna] = sob_jogador; // bota oq tava embaixo
-
-		sob_jogador =
-			mapa[prox_l][prox_c]; // salva oq vai estar embaixo
-
-		mapa[prox_l][prox_c] = 2;
-
-		plinha = prox_l;
-		pcoluna = prox_c;
-
-		movimentos++;
-
-		// verifica vitoria
-		if (sob_jogador == 5)
-		{
-			nivel_completo = true;
-		}
+		moveJogador(mapa, prox_l, prox_c, plinha, pcoluna, sob_jogador, sob_alavanca, movimentos,
+			    nivel_completo);
 	}
 }
 
-void imprimeJogo(HANDLE h, const int mapa[MAX_TAMANHO][MAX_TAMANHO],
-		 int tamanho, int rotacao, int plinha, int pcoluna, int level,
-		 int movimentos, int total_rotacoes)
+void imprimeJogo(HANDLE h, const int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao, int plinha, int pcoluna,
+		 int level, int movimentos, int total_rotacoes)
 {
 	gotoxy(h, 0, 0);
 
-	cout << "========================================\n";
-	cout << "          LABIRINTO GIRATORIO          \n";
-	cout << "========================================\n\n";
+	mostrarTitulo(false);
 
 	for (int l = 0; l < tamanho; l++)
 	{
@@ -434,6 +452,8 @@ void imprimeJogo(HANDLE h, const int mapa[MAX_TAMANHO][MAX_TAMANHO],
 					cout << "# ";
 					break;
 				case 3:
+				case 8: // caixa sobre A
+				case 9: // caixa sobre B
 					cout << "O ";
 					break;
 				case 4:
@@ -486,12 +506,19 @@ void pegaInput(char &tecla, bool &executando)
 	}
 	else
 	{
-		tecla = 0; // Clear key buffer if no input detected
+		tecla = 0; // limpa
 	}
 }
 
-void copiaMatriz(int matriz[MAX_TAMANHO][MAX_TAMANHO],
-		 int copia[MAX_TAMANHO][MAX_TAMANHO], int tamanho)
+void limpaInput()
+{
+	while (_kbhit())
+	{
+		_getch();
+	}
+}
+
+void copiaMatriz(int matriz[MAX_TAMANHO][MAX_TAMANHO], int copia[MAX_TAMANHO][MAX_TAMANHO], int tamanho)
 {
 	for (int l = 0; l < tamanho; l++)
 	{
@@ -513,8 +540,7 @@ void zeraMatriz(int matriz[MAX_TAMANHO][MAX_TAMANHO])
 	}
 }
 
-void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho,
-		 int &plinha, int &pcoluna)
+void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int &plinha, int &pcoluna)
 {
 	zeraMatriz(mapa);
 
@@ -523,19 +549,13 @@ void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho,
 	case 0:
 	{
 		int base[MAX_TAMANHO][MAX_TAMANHO] = {
-			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-			{1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-			{1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1},
-			{1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1},
-			{1, 0, 1, 0, 4, 0, 0, 0, 1, 0, 1},
-			{1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1},
-			{1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1},
-			{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-			{1, 0, 1, 1, 1, 6, 1, 1, 0, 0, 1},
-			{1, 0, 0, 0, 0, 0, 0, 0, 0, 5, 1},
-			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
-
-		};
+			// se a formatação tá ruim , ela está ruim.
+			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 2, 0, 0, 1, 0, 0, 0, 3, 0, 1},
+			{1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1}, {1, 0, 1, 0, 0, 0, 0, 4, 1, 0, 1},
+			{1, 0, 1, 1, 1, 6, 1, 1, 1, 0, 1}, {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+			{1, 1, 1, 7, 1, 1, 1, 0, 1, 1, 1}, {1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1},
+			{1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1}, {1, 0, 1, 0, 0, 0, 1, 0, 0, 5, 1},
+			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
 
 		copiaMatriz(base, mapa, tamanho);
 		localizaJogador(mapa, tamanho, plinha, pcoluna);
@@ -545,21 +565,13 @@ void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho,
 	case 1:
 	{
 		int base[MAX_TAMANHO][MAX_TAMANHO] = {
-			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-			{1, 2, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1},
-			{1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1},
-			{1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1},
-			{1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1},
-			{1, 0, 0, 0, 4, 0, 0, 0, 0, 0, 1, 0, 1},
-			{1, 1, 1, 7, 1, 1, 1, 0, 1, 0, 1, 0, 1},
-			{1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1},
-			{1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1},
-			{1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 3, 1},
-			{1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1},
-			{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 5},
-			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
-
-		};
+			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 2, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3, 1},
+			{1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1}, {1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1},
+			{1, 0, 1, 1, 1, 6, 1, 1, 1, 1, 1, 0, 1}, {1, 0, 0, 0, 4, 0, 0, 0, 0, 0, 1, 0, 1},
+			{1, 1, 1, 7, 1, 1, 1, 0, 1, 0, 1, 0, 1}, {1, 0, 0, 0, 0, 0, 1, 0, 1, 3, 0, 0, 1},
+			{1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1}, {1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+			{1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1}, {1, 6, 0, 0, 0, 0, 7, 0, 0, 0, 0, 5, 1},
+			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
 
 		copiaMatriz(base, mapa, tamanho);
 		localizaJogador(mapa, tamanho, plinha, pcoluna);
@@ -569,23 +581,14 @@ void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho,
 	case 2:
 	{
 		int base[MAX_TAMANHO][MAX_TAMANHO] = {
-			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-			{1, 2, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1},
-			{1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1},
-			{1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1},
-			{1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1},
-			{1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1},
-			{1, 0, 1, 0, 0, 4, 0, 1, 0, 0, 0, 1, 1, 1, 1},
-			{1, 0, 7, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 3, 1},
-			{1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1},
-			{1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1},
-			{1, 0, 0, 0, 1, 0, 1, 6, 0, 1, 0, 1, 1, 0, 1},
-			{1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1},
-			{1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1},
-			{1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 5, 1},
-			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
-
-		};
+			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 2, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 1},
+			{1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1}, {1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1},
+			{1, 0, 0, 0, 0, 1, 6, 1, 0, 1, 1, 1, 0, 0, 1}, {1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1},
+			{1, 0, 1, 0, 0, 4, 0, 1, 0, 0, 0, 1, 1, 1, 1}, {1, 0, 7, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 3, 1},
+			{1, 0, 1, 0, 1, 0, 0, 3, 0, 1, 1, 1, 0, 1, 1}, {1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1},
+			{1, 0, 0, 0, 1, 0, 1, 6, 0, 1, 0, 1, 1, 0, 1}, {1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 7, 0, 0, 0, 1},
+			{1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1}, {1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 5, 1},
+			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
 
 		copiaMatriz(base, mapa, tamanho);
 		localizaJogador(mapa, tamanho, plinha, pcoluna);
@@ -597,8 +600,7 @@ void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho,
 	}
 }
 
-void localizaJogador(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho,
-		     int &plinha, int &pcoluna)
+void localizaJogador(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int &plinha, int &pcoluna)
 {
 	for (int l = 0; l < tamanho; l++)
 	{
@@ -614,6 +616,8 @@ void localizaJogador(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho,
 	}
 }
 
+bool estaSobreAlavanca(int sob_jogador) { return sob_jogador == 4; }
+
 bool portaFechada(int porta, int rotacao)
 {
 
@@ -628,123 +632,217 @@ bool portaFechada(int porta, int rotacao)
 	return false;
 }
 
-void fechaPortas(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao,
-		 int plinha, int pcoluna, bool &perdeu, int sob_jogador)
+void fechaPortaJogador(int rotacao, int sob_jogador, bool &perdeu)
 {
-	for (int l = 0; l < tamanho; l++)
+	if ((sob_jogador == 6 || sob_jogador == 7) && portaFechada(sob_jogador, rotacao))
 	{
-		for (int c = 0; c < tamanho; c++)
-		{
-			int atual = mapa[l][c];
-			bool porta_fechada = false;
-
-			if (porta_fechada)
-			{
-			}
-		}
+		perdeu = true;
 	}
 }
 
-void rotacionaMapa(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int &plinha,
-		   int &pcoluna, char direcao, int &rotacao, bool &perdeu)
+bool celulaPodeSerAtravessada(int celula, int rotacao)
 {
-	// TODO: Rotação direita, esquerda Ok
-	// TODO: Mudar toda a matriz inclusive player // Falta player
-	// TODO: Aplica gravidade nos blocos. Ok -> Fazer saída sólida?
-	int temp[MAX_TAMANHO][MAX_TAMANHO];
-
-	for (int l = 0; l < tamanho; l++)
+	if (celula == 1 || ehCaixa(celula) || celula == 2) // 2 pra caixa parar no player
 	{
-		for (int c = 0; c < tamanho; c++)
-		{
-			if (direcao == 'e' || direcao == 'E')
-			{
-				temp[c][tamanho - 1 - l] = mapa[l][c];
-			}
-			else if (direcao == 'q' || direcao == 'Q')
-			{
-				temp[tamanho - 1 - c][l] = mapa[l][c];
-			}
-		}
+		return false; // Parede e caixa
 	}
-
-	copiaMatriz(temp, mapa, tamanho);
-
-	aplicaGravidade(mapa, tamanho, rotacao);
-	localizaJogador(mapa, tamanho, plinha, pcoluna);
-	fechaPortas(mapa, tamanho, rotacao, plinha, pcoluna, perdeu);
-}
-
-bool movimentoValidoBloco(int alvo, int rotacao)
-{
-	if (alvo == 1 || alvo == 2 || alvo == 3 || alvo == 5)
+	if (celula == 6 && portaFechada(6, rotacao))
 	{
-		return false;
+		return false; // A
 	}
-	if (alvo == 6 && (rotacao == 90 || rotacao == 270))
+	if (celula == 7 && portaFechada(7, rotacao))
 	{
-		return false;
-	}
-	if (alvo == 7 && (rotacao == 0 || rotacao == 180))
-	{
-		return false;
+		return false; // B
 	}
 	return true;
 }
 
-void aplicaGravidade(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho,
-		     int rotacao)
+bool celulaSustentaBloco(int celula, int rotacao)
 {
-	// TODO: Vai pra baixo até bater em objeto sólido (porta fechada
-	// ou parede).
-	// TODO: Checa se uma porta fechando mata o player ou destroi
-	// uma caixa.
-	for (int l = tamanho - 2; l >= 0;
-	     l--) // de cima pra baixo começando na penultima fileira
+	return !celulaPodeSerAtravessada(celula, rotacao); // n pode atravessar == solido
+}
+
+void esmagaCaixas(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao)
+{
+	for (int l = 0; l < tamanho; l++)
 	{
 		for (int c = 0; c < tamanho; c++)
 		{
-			if (mapa[l][c] == 3)
+			if (mapa[l][c] == 8 && portaFechada(6, rotacao))
 			{
-				int linha = l;
-				int coluna = c;
-				while (linha + 1 < tamanho)
-				{
-					int prox = mapa[linha + 1][c];
-
-					if (movimentoValidoBloco(prox, rotacao))
-					{
-						mapa[linha + 1][coluna] = 3;
-						mapa[linha][coluna] = 0;
-						linha++;
-					}
-					else
-					{
-						break;
-					}
-				}
+				mapa[l][c] = 6; // kaboom A
+			}
+			else if (mapa[l][c] == 9 && portaFechada(7, rotacao))
+			{
+				mapa[l][c] = 7; // kaboom B
 			}
 		}
 	}
 }
 
-void loopJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int level,
-	      int &rotacao, int &plinha, int &pcoluna, int &sob_jogador,
-	      int &movimentos, int &total_rotacoes, bool &jogo_em_andamento)
+void rotacionaMapa(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, char direcao, int &rotacao, int &plinha,
+		   int &pcoluna, int &sob_jogador, bool &perdeu)
 {
+	int nova_rotacao = rotacao;
+
+	if (direcao == 'e' || direcao == 'E')
+	{
+		nova_rotacao = (rotacao + 90) % 360;
+	}
+	else if (direcao == 'q' || direcao == 'Q')
+	{
+		nova_rotacao = (rotacao + 270) % 360;
+	}
+
+	// Bota oq tá embaixo do jogador na matriz p n perder
+	int origem[MAX_TAMANHO][MAX_TAMANHO];
+	copiaMatriz(mapa, origem, tamanho);
+	origem[plinha][pcoluna] = sob_jogador;
+
+	int novo_mapa[MAX_TAMANHO][MAX_TAMANHO];
+	zeraMatriz(novo_mapa);
+
+	for (int l = 0; l < tamanho; l++)
+	{
+		for (int c = 0; c < tamanho; c++)
+		{
+			int nova_linha, nova_coluna;
+
+			if (direcao == 'e' || direcao == 'E') // Inverte pra direita / relógio
+			{
+				nova_linha = c;
+				nova_coluna = tamanho - 1 - l;
+			}
+			else // Inverta pra esquerda / antihorário
+			{
+				nova_linha = tamanho - 1 - c;
+				nova_coluna = l;
+			}
+
+			novo_mapa[nova_linha][nova_coluna] = origem[l][c];
+		}
+	}
+
+	// acha jogador pelo índice
+	int plinha_antigo = plinha;
+	int pcoluna_antigo = pcoluna;
+
+	if (direcao == 'e' || direcao == 'E')
+	{
+		plinha = pcoluna_antigo;
+		pcoluna = tamanho - 1 - plinha_antigo;
+	}
+	else
+	{
+		plinha = tamanho - 1 - pcoluna_antigo;
+		pcoluna = plinha_antigo;
+	}
+
+	sob_jogador = novo_mapa[plinha][pcoluna]; // guarda
+	novo_mapa[plinha][pcoluna] = 2;
+
+	copiaMatriz(novo_mapa, mapa, tamanho);
+	rotacao = nova_rotacao;
+
+	fechaPortaJogador(rotacao, sob_jogador, perdeu); // morreu ou n
+
+	if (perdeu)
+	{
+		return;
+	}
+
+	// Aplica gravidade nos blocos que sobraram
+	aplicaGravidade(mapa, tamanho, rotacao);
+
+	// Esmaga qualquer caixa que tenha ficado sobre uma porta que fechou
+	esmagaCaixas(mapa, tamanho, rotacao);
+}
+
+bool porta(int alvo) { return (alvo == 6 || alvo == 7); }
+
+void aplicaGravidade(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao)
+{
+
+	// baixo pra cima
+	for (int l = tamanho - 2; l >= 0; l--)
+	{
+		for (int c = 0; c < tamanho; c++)
+		{
+			int caixa = mapa[l][c];
+
+			if (!ehCaixa(caixa))
+			{
+				continue;
+			}
+
+			int destino = l + 1; // p n bater fora do limite
+
+			while (destino < tamanho)
+			{
+				int alvo = mapa[destino][c];
+
+				if (celulaSustentaBloco(alvo, rotacao))
+				{
+					break;
+				}
+				destino++;
+			}
+
+			int nova_linha = destino - 1;
+
+			if (nova_linha == l) // apoiada
+			{
+				continue;
+			}
+
+			// Revela debaixo
+			if (caixa == 8)
+			{
+				mapa[l][c] = 6; // A
+			}
+			else if (caixa == 9)
+			{
+				mapa[l][c] = 7; // B
+			}
+			else
+			{
+				mapa[l][c] = 0;
+			}
+
+			int terreno_destino = mapa[nova_linha][c]; // n sumir a porta
+
+			if (terreno_destino == 6)
+			{
+				mapa[nova_linha][c] = 8;
+			}
+			else if (terreno_destino == 7)
+			{
+				mapa[nova_linha][c] = 9;
+			}
+			else
+			{
+				mapa[nova_linha][c] = 3;
+			}
+		}
+	}
+}
+
+void loopJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int level, int &rotacao, int &plinha, int &pcoluna,
+	      int &sob_jogador, bool &sob_alavanca, int &movimentos, int &total_rotacoes, bool &jogo_em_andamento)
+{
+	limpaInput();
 	bool executando_level = true;
 	char tecla = 0;
 	bool nivel_completo = false;
 	bool perdeu = false;
+	bool reiniciar = false;
 
 	// desativa o cursor no console
 	escondeCursor();
-	HANDLE h =
-		GetStdHandle(STD_OUTPUT_HANDLE); // handle da saída do console
+	HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE); // handle da saída do console
 	limpaTela();
 
-	imprimeJogo(h, mapa, tamanho, rotacao, plinha, pcoluna, level,
-		    movimentos, total_rotacoes);
+	imprimeJogo(h, mapa, tamanho, rotacao, plinha, pcoluna, level, movimentos, total_rotacoes);
 
 	while (executando_level && !nivel_completo && !perdeu)
 	{
@@ -752,19 +850,35 @@ void loopJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int level,
 
 		if (tecla != 0)
 		{
-			atualizaJogo(mapa, tecla, tamanho, rotacao, plinha,
-				     pcoluna, sob_jogador, nivel_completo,
-				     perdeu, executando_level, total_rotacoes,
-				     movimentos);
-			imprimeJogo(h, mapa, tamanho, rotacao, plinha, pcoluna,
-				    level, movimentos, total_rotacoes);
+			atualizaJogo(mapa, tecla, tamanho, rotacao, plinha, pcoluna, sob_jogador, sob_alavanca,
+				     nivel_completo, perdeu, reiniciar, total_rotacoes, movimentos);
+
+			if (reiniciar)
+			{
+				carregaMapa(level, mapa, tamanho, plinha, pcoluna);
+				sob_jogador = 0;
+				sob_alavanca = false;
+				rotacao = 0;
+				movimentos = 0;
+				total_rotacoes = 0;
+				reiniciar = false;
+				limpaTela();
+			}
+
+			imprimeJogo(h, mapa, tamanho, rotacao, plinha, pcoluna, level, movimentos, total_rotacoes);
 		}
 		Sleep(30);
 	}
 
-	if (nivel_completo || perdeu)
+	if (nivel_completo)
 	{
-		jogo_em_andamento = false;
+		tela_vitoria(movimentos, total_rotacoes);
+		jogo_em_andamento = true;
+	}
+	else if (perdeu)
+	{
+		tela_derrota(movimentos, total_rotacoes);
+		jogo_em_andamento = true;
 	}
 	else
 	{
@@ -780,26 +894,30 @@ int main()
 	int level = 0;
 
 	int mapa[MAX_TAMANHO][MAX_TAMANHO];
+
 	int tamanho = 11;
 	int rotacao = 0;
 	int plinha = 0, pcoluna = 0;
 	int sob_jogador = 0;
+	bool sob_alavanca = false;
 	int movimentos = 0;
 	int total_rotacoes = 0;
 
 	srand(time(NULL));
-	setlocale(LC_ALL, ""); // local do pt br sistema
+
+	SetConsoleOutputCP(850);
+	SetConsoleCP(850);
+	setlocale(LC_ALL, "Portuguese_Brazil.850");
 
 	limpaTela();
-	mostrarTitulo();
+	mostrarTitulo(true);
 
 	// adicionar
 	while (executando)
 	{
-		menu();
-		processaMenu(executando, jogo_em_andamento, level, mapa,
-			     tamanho, rotacao, plinha, pcoluna, sob_jogador,
-			     movimentos, total_rotacoes);
+		imprime_menu();
+		processaMenu(executando, jogo_em_andamento, level, mapa, tamanho, rotacao, plinha, pcoluna, sob_jogador,
+			     sob_alavanca, movimentos, total_rotacoes);
 		limpaTela();
 	}
 
