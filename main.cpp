@@ -5,6 +5,8 @@
 using namespace std;
 
 const int MAX_TAMANHO = 30;
+char sequencia[255] = {};
+int conta_seq = 0;
 
 void ajuda();
 void atualizaJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], char tecla, int tamanho, int &rotacao, int &plinha, int &pcoluna,
@@ -121,6 +123,7 @@ void tela_vitoria(int movimentos, int total_rotacoes)
 	cout << "Movimentos: " << movimentos << "\n";
 	cout << "Rotacoes: " << total_rotacoes << "\n\n";
 	cout << "Pressione qualquer tecla para voltar...";
+	cout << "Sequencia usada: " << sequencia << endl;
 	limpaInput();
 	getch();
 }
@@ -347,7 +350,7 @@ void limpaTela()
 				 // Stackoverflow
 }
 
-bool ehCaixa(int celula) { return celula == 3 || celula == 8 || celula == 9; }
+bool ehCaixa(int celula) { return celula == 3 || celula == 8 || celula == 9 || celula == 10; }
 
 bool movimentoValido(int l, int c, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao)
 {
@@ -454,6 +457,7 @@ void imprimeJogo(HANDLE h, const int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho
 				case 3:
 				case 8: // caixa sobre A
 				case 9: // caixa sobre B
+				case 10: // caixa sobre S
 					cout << "O ";
 					break;
 				case 4:
@@ -550,17 +554,17 @@ void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int
 	{
 		int base[MAX_TAMANHO][MAX_TAMANHO] = {
 			// se a formatação tá ruim , ela está ruim.
-    			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-   			{1, 2, 0, 7, 0, 4, 1, 0, 7, 5, 1},
-    			{1, 1, 1, 1, 1, 0, 1, 0, 1, 6, 1},
-    			{1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1},
-    			{1, 0, 1, 0, 1, 3, 1, 0, 1, 0, 1},
-    			{1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1},
-    			{1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1},
-    			{1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
-    			{1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1},
-    			{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
+			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 2, 0, 4, 0, 0, 0, 0, 0, 0, 1},
+    {1, 1, 1, 6, 1, 1, 1, 0, 0, 0, 1},
+    {1, 0, 1, 0, 0, 0, 1, 1, 6, 1, 1},
+    {1, 0, 7, 0, 0, 1, 1, 3, 0, 0, 1},
+    {1, 0, 1, 1, 6, 1, 4, 0, 0, 1, 1},
+    {1, 0, 1, 1, 0, 1, 1, 1, 6, 1, 1},
+    {1, 0, 1, 0, 3, 0, 0, 7, 0, 0, 1},
+    {1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1},
+    {1, 4, 1, 0, 0, 0, 0, 1, 0, 5, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
 
 		copiaMatriz(base, mapa, tamanho);
 		localizaJogador(mapa, tamanho, plinha, pcoluna);
@@ -570,17 +574,19 @@ void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int
 	case 1:
 	{
 		int base[MAX_TAMANHO][MAX_TAMANHO] = {
-			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 2, 0, 7, 0, 4, 1, 0, 0, 5, 1},
-    {1, 1, 1, 1, 1, 0, 1, 0, 1, 6, 1},
-    {1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1},
-    {1, 0, 1, 0, 1, 3, 1, 0, 1, 0, 1},
-    {1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1},
-    {1, 0, 1, 1, 1, 6, 1, 1, 1, 0, 1},
-    {1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1},
-    {1, 1, 1, 0, 1, 4, 1, 0, 1, 1, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 7, 0, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
+			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    			{1, 2, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 1},
+    			{1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
+    			{1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
+    			{1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1},
+    			{1, 0, 1, 0, 1, 0, 0, 3, 1, 0, 1, 0, 1},
+    			{1, 0, 7, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1},
+    			{1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1},
+    			{1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1},
+    			{1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1},
+    			{1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1},
+    			{1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 6, 5},
+    			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
 
 		copiaMatriz(base, mapa, tamanho);
 		localizaJogador(mapa, tamanho, plinha, pcoluna);
@@ -590,17 +596,21 @@ void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int
 	case 2:
 	{
 		int base[MAX_TAMANHO][MAX_TAMANHO] = {
-			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 2, 0, 7, 0, 4, 1, 0, 0, 5, 1},
-    {1, 1, 1, 1, 1, 0, 1, 0, 1, 6, 1},
-    {1, 0, 0, 0, 1, 0, 1, 3, 1, 0, 1},
-    {1, 0, 1, 0, 1, 3, 1, 0, 1, 0, 1},
-    {1, 0, 1, 4, 1, 7, 1, 0, 1, 0, 1},
-    {1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1},
-    {1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1},
-    {1, 0, 6, 0, 0, 4, 1, 0, 0, 0, 1},
-    {1, 1, 1, 1, 1, 0, 7, 0, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
+			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    			{1, 2, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1},
+    			{1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1},
+    			{1, 0, 1, 4, 0, 1, 0, 1, 0, 1, 0, 1, 3, 0, 1},
+    			{1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1},
+    			{1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1},
+    			{1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1},
+    			{1, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    			{1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
+    			{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
+    			{1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1},
+    			{1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1},
+    			{1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1},
+    			{1, 0, 0, 0, 1, 0, 0, 0, 6, 0, 0, 0, 0, 5, 1},
+    			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
 
 		copiaMatriz(base, mapa, tamanho);
 		localizaJogador(mapa, tamanho, plinha, pcoluna);
@@ -762,12 +772,11 @@ void rotacionaMapa(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, char direcao
 	{
 		return;
 	}
+	// Esmaga qualquer caixa que tenha ficado sobre uma porta que fechou
+	esmagaCaixas(mapa, tamanho, rotacao);
 
 	// Aplica gravidade nos blocos que sobraram
 	aplicaGravidade(mapa, tamanho, rotacao);
-
-	// Esmaga qualquer caixa que tenha ficado sobre uma porta que fechou
-	esmagaCaixas(mapa, tamanho, rotacao);
 }
 
 bool porta(int alvo) { return (alvo == 6 || alvo == 7); }
@@ -816,6 +825,10 @@ void aplicaGravidade(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotaca
 			{
 				mapa[l][c] = 7; // B
 			}
+			else if (caixa == 10)
+			{
+				mapa[l][c] = 5; // S
+			}
 			else
 			{
 				mapa[l][c] = 0;
@@ -830,6 +843,10 @@ void aplicaGravidade(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotaca
 			else if (terreno_destino == 7)
 			{
 				mapa[nova_linha][c] = 9;
+			}
+			else if (terreno_destino == 5)
+			{
+				mapa[nova_linha][c] = 10;
 			}
 			else
 			{
@@ -862,6 +879,12 @@ void loopJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int level, int &r
 
 		if (tecla != 0)
 		{
+			if (tecla != 0 && conta_seq < 255)
+			{
+				sequencia[conta_seq] = tecla;
+				conta_seq++;
+				sequencia[conta_seq] = '\0';
+			}
 			atualizaJogo(mapa, tecla, tamanho, rotacao, plinha, pcoluna, sob_jogador, sob_alavanca,
 				     nivel_completo, perdeu, reiniciar, total_rotacoes, movimentos);
 
@@ -873,6 +896,7 @@ void loopJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int level, int &r
 				rotacao = 0;
 				movimentos = 0;
 				total_rotacoes = 0;
+				conta_seq = 0;
 				reiniciar = false;
 				limpaTela();
 			}
