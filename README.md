@@ -1,12 +1,13 @@
 ﻿# One Card Maze - Algoritmos II (UNIVALI)
 
 ## 🎮 Como Jogar
-Chegue até a saída. Alavancas rotacionam o mapa e movem caixas para baixo e abrem portas dependendo do ângulo. 
+Alcance a saída girando o mapa através da Alavanca para abrir portas. Caixas em cima de portas são destruídas quando rotacionadas.
 
 ### Legenda:
 * `#` : Parede
 * `@` : Jogador
 * `O` : Caixa
+* `A` : Alavanca
 * `S` : Saída
 * `=` : Porta A fechada
 * `:` : Porta A aberta
