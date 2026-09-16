@@ -10,23 +10,28 @@ int conta_seq = 0;
 
 void ajuda();
 void atualizaJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], char tecla, int tamanho, int &rotacao, int &plinha, int &pcoluna,
-		  int &sob_jogador, bool &sob_alavanca, bool &nivel_completo, bool &perdeu, int &total_rotacoes,
+		  int &sob_jogador, bool &sob_alavanca, bool &nivel_completo, bool &perdeu, bool &reiniciar, int &total_rotacoes,
 		  int &movimentos);
-void aplicaGravidade(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao);
+void aplicaGravidade(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao, bool &perdeu); // add perdeu se for matar
+/* Alterar p matar
+void aplicaGravidadeJogador(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao,
+                            int &plinha, int pcoluna, int &sob_jogador,
+                            bool &sob_alavanca, bool &nivel_completo);
+*/
 void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int &plinha, int &pcoluna);
 bool celulaPodeSerAtravessada(int celula, int rotacao);
 bool celulaSustentaBloco(int celula, int rotacao);
 void copiaMatriz(int matriz[MAX_TAMANHO][MAX_TAMANHO], int copia[MAX_TAMANHO][MAX_TAMANHO], int tamanho);
 void defineTamanho(int level, int &tamanho);
 void efeitoTexto(const string &texto, int atraso_ms = 40);
+bool ehCaixa(int celula);
 void escondeCursor();
 void esmagaCaixas(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao);
 bool estaSobreAlavanca(int sob_jogador);
-void fechaPortas(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao, int plinha, int pcoluna, bool &perdeu,
-		 int sob_jogador);
-void gotoxy(HANDLE h, int XPos, int YPos);
+//void fechaPortaJogador(int rotacao, int sob_jogador, bool &perdeu); Alterar p matar
+void gotoxy(int XPos, int YPos);
 void hud(int level, int rotacao, int movimentos, int total_rotacoes);
-void imprimeJogo(HANDLE h, const int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao, int plinha, int pcoluna,
+void imprimeJogo(const int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao, int plinha, int pcoluna,
 		 int level, int movimentos, int total_rotacoes);
 void imprime_menu();
 void limpaInput();
@@ -44,7 +49,7 @@ void processaMenu(bool &executando, bool &jogo_em_andamento, int &level, int map
 		  int &tamanho, int &rotacao, int &plinha, int &pcoluna, int &sob_jogador, bool &sob_alavanca,
 		  int &movimentos, int &total_rotacoes);
 void rotacionaMapa(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, char direcao, int &rotacao, int &plinha,
-		   int &pcoluna, int &sob_jogador, bool &perdeu);
+		   int &pcoluna, int &sob_jogador, bool &perdeu, bool &sob_alavanca, bool &nivel_completo);
 int selecionaMapa();
 void sobre();
 void tela_derrota(int movimentos, int total_rotacoes);
@@ -106,12 +111,12 @@ void tela_derrota(int movimentos, int total_rotacoes)
 {
 	limpaTela();
 	cout << "====================================\n";
-	cout << "         GAME OVER!                 \n";
-	cout << "   Voce foi esmagado pela porta.    \n";
+	cout << "             GAME OVER!             \n";
+	cout << "          Voce foi esmagado.  	     \n";
 	cout << "====================================\n\n";
 	cout << "Pressione qualquer tecla para voltar...";
 	limpaInput();
-	getch();
+	_getch();
 }
 
 void tela_vitoria(int movimentos, int total_rotacoes)
@@ -122,10 +127,10 @@ void tela_vitoria(int movimentos, int total_rotacoes)
 	cout << "====================================\n";
 	cout << "Movimentos: " << movimentos << "\n";
 	cout << "Rotacoes: " << total_rotacoes << "\n\n";
+	cout << "Sequencia usada: " << sequencia << "\n\n";
 	cout << "Pressione qualquer tecla para voltar...";
-	cout << "Sequencia usada: " << sequencia << endl;
 	limpaInput();
-	getch();
+	_getch();
 }
 
 void escondeCursor() // prof.
@@ -186,7 +191,7 @@ void ajuda()
 
 	cout << "Pressione qualquer tecla para voltar..." << endl;
 	limpaInput();
-	getch();
+	_getch();
 }
 
 int selecionaMapa()
@@ -200,7 +205,7 @@ int selecionaMapa()
 
 	while (true)
 	{
-		char opcao = getch();
+		char opcao = _getch();
 
 		if (opcao == '1')
 		{
@@ -214,7 +219,7 @@ int selecionaMapa()
 
 			while (true)
 			{
-				char opcao = getch();
+				char opcao = _getch();
 
 				if (opcao == '1')
 				{
@@ -331,23 +336,22 @@ void defineTamanho(int level, int &tamanho)
 	}
 	else if (level == 2)
 	{
-		tamanho = 15;
+		tamanho = 14;
 	}
 }
 
 // Código Prof
-void gotoxy(HANDLE h, int XPos, int YPos)
+void gotoxy(int XPos, int YPos)
 {
 	COORD coord;
 	coord.X = XPos; // Propriedade console
 	coord.Y = YPos;
-	SetConsoleCursorPosition(h, coord);
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
 
 void limpaTela()
 {
-	cout << "\033[H\033[2J"; // limpador de tela universal ANSI ->
-				 // Stackoverflow
+	system("cls");
 }
 
 bool ehCaixa(int celula) { return celula == 3 || celula == 8 || celula == 9 || celula == 10; }
@@ -410,7 +414,7 @@ void atualizaJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], char tecla, int tamanho, i
 	}
 	else if ((tecla == 'q' || tecla == 'Q' || tecla == 'e' || tecla == 'E') && sob_alavanca)
 	{
-		rotacionaMapa(mapa, tamanho, tecla, rotacao, plinha, pcoluna, sob_jogador, perdeu);
+		rotacionaMapa(mapa, tamanho, tecla, rotacao, plinha, pcoluna, sob_jogador, perdeu, sob_alavanca, nivel_completo);
 		sob_alavanca = estaSobreAlavanca(sob_jogador);
 
 		total_rotacoes++;
@@ -428,10 +432,10 @@ void atualizaJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], char tecla, int tamanho, i
 	}
 }
 
-void imprimeJogo(HANDLE h, const int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao, int plinha, int pcoluna,
+void imprimeJogo(const int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao, int plinha, int pcoluna,
 		 int level, int movimentos, int total_rotacoes)
 {
-	gotoxy(h, 0, 0);
+	gotoxy(0, 0);
 
 	mostrarTitulo(false);
 
@@ -564,7 +568,8 @@ void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int
     			{1, 0, 1, 0, 3, 0, 0, 7, 0, 0, 1},
     			{1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1},
     			{1, 4, 1, 0, 0, 0, 0, 1, 0, 5, 1},
-    			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
+    			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+		};
 
 		copiaMatriz(base, mapa, tamanho);
 		localizaJogador(mapa, tamanho, plinha, pcoluna);
@@ -573,20 +578,22 @@ void carregaMapa(int level, int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int
 	}
 	case 1:
 	{
-		int base[MAX_TAMANHO][MAX_TAMANHO] = {
+		int base[MAX_TAMANHO][MAX_TAMANHO] =
+		{
 			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    			{1, 2, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 1},
-    			{1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
-    			{1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
-    			{1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1},
-    			{1, 0, 1, 0, 1, 0, 0, 3, 1, 0, 1, 0, 1},
-    			{1, 0, 7, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1},
-    			{1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1},
-    			{1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1},
-    			{1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1},
-    			{1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1},
-    			{1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 6, 5},
-    			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
+			{1, 2, 0, 0, 0, 1, 4, 0, 0, 0, 0, 0, 1},
+			{1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
+			{1, 0, 1, 3, 0, 0, 0, 3, 0, 0, 1, 0, 1},
+			{1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
+			{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
+			{1, 0, 0, 3, 0, 6, 0, 0, 0, 0, 0, 0, 1},
+			{1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+			{1, 0, 7, 0, 0, 3, 0, 0, 0, 0, 0, 0, 1},
+			{1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
+			{1, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 5, 1},
+			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+		};
 
 		copiaMatriz(base, mapa, tamanho);
 		localizaJogador(mapa, tamanho, plinha, pcoluna);
@@ -653,6 +660,7 @@ bool portaFechada(int porta, int rotacao)
 	return false;
 }
 
+/*Alterar p matar
 void fechaPortaJogador(int rotacao, int sob_jogador, bool &perdeu)
 {
 	if ((sob_jogador == 6 || sob_jogador == 7) && portaFechada(sob_jogador, rotacao))
@@ -660,10 +668,11 @@ void fechaPortaJogador(int rotacao, int sob_jogador, bool &perdeu)
 		perdeu = true;
 	}
 }
+*/
 
 bool celulaPodeSerAtravessada(int celula, int rotacao)
 {
-	if (celula == 1 || ehCaixa(celula) || celula == 2) // 2 pra caixa parar no player
+	if (celula == 1 || ehCaixa(celula) || celula == 2) // Alterar p matar
 	{
 		return false; // Parede e caixa
 	}
@@ -680,7 +689,7 @@ bool celulaPodeSerAtravessada(int celula, int rotacao)
 
 bool celulaSustentaBloco(int celula, int rotacao)
 {
-	return !celulaPodeSerAtravessada(celula, rotacao); // n pode atravessar == solido
+	return !celulaPodeSerAtravessada(celula, rotacao) || celula == 4; // n pode atravessar == solido
 }
 
 void esmagaCaixas(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao)
@@ -702,7 +711,7 @@ void esmagaCaixas(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao)
 }
 
 void rotacionaMapa(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, char direcao, int &rotacao, int &plinha,
-		   int &pcoluna, int &sob_jogador, bool &perdeu)
+		   int &pcoluna, int &sob_jogador, bool &perdeu, bool &sob_alavanca, bool &nivel_completo)
 {
 	int nova_rotacao = rotacao;
 
@@ -765,22 +774,63 @@ void rotacionaMapa(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, char direcao
 	copiaMatriz(novo_mapa, mapa, tamanho);
 	rotacao = nova_rotacao;
 
-	fechaPortaJogador(rotacao, sob_jogador, perdeu); // morreu ou n
-
-	if (perdeu)
-	{
-		return;
-	}
 	// Esmaga qualquer caixa que tenha ficado sobre uma porta que fechou
 	esmagaCaixas(mapa, tamanho, rotacao);
 
 	// Aplica gravidade nos blocos que sobraram
-	aplicaGravidade(mapa, tamanho, rotacao);
+	aplicaGravidade(mapa, tamanho, rotacao, perdeu); // add perdeu se for matar
+
+	/* Alterar p matar
+	aplicaGravidadeJogador(mapa, tamanho, rotacao, plinha, pcoluna, sob_jogador, sob_alavanca, nivel_completo);
+
+	fechaPortaJogador(rotacao, sob_jogador, perdeu); // Caso precise matar o jogador com a gravidade
+	
+	if (perdeu)
+	{
+		return;
+	}
+	*/
 }
 
-bool porta(int alvo) { return (alvo == 6 || alvo == 7); }
+/* Alterar p matar
+void aplicaGravidadeJogador(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao,
+                            int &plinha, int pcoluna, int &sob_jogador,
+                            bool &sob_alavanca, bool &nivel_completo)
+{
+	int destino = plinha + 1;
 
-void aplicaGravidade(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao)
+	// desce.
+	while (destino < tamanho)
+	{
+		int alvo = mapa[destino][pcoluna];
+
+		if (celulaSustentaBloco(alvo, rotacao))
+		{
+			break;
+		}
+		destino++;
+	}
+
+	int nova_linha = destino - 1;
+
+	if (nova_linha > plinha)
+	{
+		mapa[plinha][pcoluna] = sob_jogador;     // restaura
+		sob_jogador = mapa[nova_linha][pcoluna]; // salva
+		sob_alavanca = estaSobreAlavanca(sob_jogador);
+
+		mapa[nova_linha][pcoluna] = 2;           
+		plinha = nova_linha;
+
+		if (sob_jogador == 5) // saída né
+		{
+			nivel_completo = true;
+		}
+	}
+}
+*/
+
+void aplicaGravidade(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotacao, bool &perdeu) // add perdeu se for matar
 {
 
 	// baixo pra cima
@@ -800,6 +850,13 @@ void aplicaGravidade(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotaca
 			while (destino < tamanho)
 			{
 				int alvo = mapa[destino][c];
+
+				/* Alterar p matar
+				if (alvo == 2)
+				{
+					perdeu = true;	
+				}
+				*/
 
 				if (celulaSustentaBloco(alvo, rotacao))
 				{
@@ -826,7 +883,7 @@ void aplicaGravidade(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int rotaca
 			}
 			else if (caixa == 10)
 			{
-				mapa[l][c] = 5; // S
+				mapa[l][c] = 5; // s
 			}
 			else
 			{
@@ -867,10 +924,9 @@ void loopJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int level, int &r
 
 	// desativa o cursor no console
 	escondeCursor();
-	HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE); // handle da saída do console
 	limpaTela();
 
-	imprimeJogo(h, mapa, tamanho, rotacao, plinha, pcoluna, level, movimentos, total_rotacoes);
+	imprimeJogo(mapa, tamanho, rotacao, plinha, pcoluna, level, movimentos, total_rotacoes);
 
 	while (executando_level && !nivel_completo && !perdeu)
 	{
@@ -900,7 +956,7 @@ void loopJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int level, int &r
 				limpaTela();
 			}
 
-			imprimeJogo(h, mapa, tamanho, rotacao, plinha, pcoluna, level, movimentos, total_rotacoes);
+			imprimeJogo(mapa, tamanho, rotacao, plinha, pcoluna, level, movimentos, total_rotacoes);
 		}
 		Sleep(30);
 	}
@@ -908,12 +964,12 @@ void loopJogo(int mapa[MAX_TAMANHO][MAX_TAMANHO], int tamanho, int level, int &r
 	if (nivel_completo)
 	{
 		tela_vitoria(movimentos, total_rotacoes);
-		jogo_em_andamento = true;
+		jogo_em_andamento = false;
 	}
 	else if (perdeu)
 	{
 		tela_derrota(movimentos, total_rotacoes);
-		jogo_em_andamento = true;
+		jogo_em_andamento = false;
 	}
 	else
 	{
@@ -944,12 +1000,22 @@ int main()
 	SetConsoleCP(850);
 	setlocale(LC_ALL, "Portuguese_Brazil.850");
 
-	limpaTela();
-	mostrarTitulo(true);
+	limpaTela();	
+	bool primeira_vez = true;
 
 	// adicionar
 	while (executando)
 	{
+		if(primeira_vez)
+		{
+			mostrarTitulo(true);
+			primeira_vez = false;
+		}
+		else
+		{
+			mostrarTitulo(false);
+		}
+
 		imprime_menu();
 		processaMenu(executando, jogo_em_andamento, level, mapa, tamanho, rotacao, plinha, pcoluna, sob_jogador,
 			     sob_alavanca, movimentos, total_rotacoes);
