@@ -1,0 +1,5 @@
+1 16 Zug
+1 28 Zig
+2 58 Zag
+2 60 Zig
+3 49 Zug
