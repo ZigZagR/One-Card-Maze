@@ -48,3 +48,6 @@ g++ main.cpp -o jogo.exe
 **Professor:** Thiago Felski
 **Disciplina:** Algoritmos e Programação II
 **Data:** Setembro/2026   
+
+## Log v2
+* 08/10 -> Refatoração com STRUCTS, adaptação do placar e introdução de ENUM para as células.
